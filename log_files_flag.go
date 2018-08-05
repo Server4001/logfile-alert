@@ -14,7 +14,6 @@ func (i *logFilesFlag) Set(value string) error {
 	return nil
 }
 
-// TODO : Figure out what this should do.
 func (i *logFilesFlag) Type() string {
-	return "log files"
+	return "stringSlice"
 }
