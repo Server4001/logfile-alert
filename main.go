@@ -6,24 +6,8 @@ import (
 	flag "github.com/spf13/pflag"
 )
 
-type arrayFlags []string
-
-func (i *arrayFlags) String() string {
-	return fmt.Sprintf("%v", *i)
-}
-
-func (i *arrayFlags) Set(value string) error {
-	*i = append(*i, value)
-
-	return nil
-}
-
-func (i *arrayFlags) Type() string {
-	return ""
-}
-
 var (
-	file arrayFlags
+	file logFilesFlag
 )
 
 func init() {
