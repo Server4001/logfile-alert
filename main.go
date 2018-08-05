@@ -7,11 +7,13 @@ import (
 )
 
 var (
-	file logFilesFlag
+	file  logFilesFlag
+	regex string
 )
 
 func init() {
 	flag.VarP(&file, "file", "f", "Log files to tail.")
+	flag.StringVarP(&regex, "regex", "r", "", "Regex to look for in log files.")
 }
 
 func main() {
@@ -19,4 +21,5 @@ func main() {
 
 	fmt.Println("Test")
 	fmt.Println(file)
+	fmt.Println(regex)
 }
