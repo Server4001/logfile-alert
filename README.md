@@ -16,4 +16,6 @@
 
 ### TODO
 
-* Everything
+* Implement inotify for log files
+* Implement signal handling for graceful shutdown
+* Implement signal handling for config reload
