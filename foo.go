@@ -15,9 +15,7 @@ func getConfig() {
 		panic(err)
 	}
 
-	type ConfigJson map[string]interface{}
-
-	var configParsed ConfigJson
+	var configParsed map[string]interface{}
 
 	jsonErr := json.Unmarshal(configRaw, &configParsed)
 	if jsonErr != nil {
