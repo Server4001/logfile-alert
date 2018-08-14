@@ -1,0 +1,11 @@
+{
+    "watchers": [
+        {
+            "log_files": [
+                "/var/log/nginx/error.log",
+                "/var/log/www/app.log"
+            ],
+            "regex": "/^[0-9]{4}\\/[0-9]{2}\\/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} \\[error\\] /"
+        }
+    ]
+}
