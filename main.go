@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func getConfig() []Watcher {
@@ -49,7 +52,30 @@ func main() {
 		}
 	}
 
-	// sigs := make(chan os.Signal, 1)
-	// done := make(chan bool, 1)
+	configReload := make(chan os.Signal, 1)
+	shutdown := make(chan os.Signal, 1)
+	done := make(chan bool, 1)
 
+	signal.Notify(configReload, syscall.SIGHUP)
+	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
+
+	go reloadHandler(configReload)
+	go shutdownHandler(shutdown, done)
+
+	fmt.Println("awaiting signal")
+	<-done
+	fmt.Println("exiting")
+}
+
+func reloadHandler(configReload chan os.Signal) {
+	for {
+		sig := <-configReload
+		fmt.Println("Reloading config due to:", sig)
+	}
+}
+
+func shutdownHandler(shutdown chan os.Signal, done chan bool) {
+	sig := <-shutdown
+	fmt.Println("Quitting due to signal:", sig)
+	done <- true
 }
