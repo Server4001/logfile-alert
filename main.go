@@ -60,7 +60,7 @@ func main() {
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
 
 	go reloadHandler(configReload)
-	go shutdownHandler(shutdown, done)
+	go shutdownHandler(shutdown, configReload, done)
 
 	fmt.Println("awaiting signal")
 	<-done
@@ -73,8 +73,16 @@ func reloadHandler(configReload chan os.Signal) {
 	}
 }
 
-func shutdownHandler(shutdown chan os.Signal, done chan bool) {
+func shutdownHandler(
+	shutdown chan os.Signal,
+	configReload chan os.Signal,
+	done chan bool) {
+
 	sig := <-shutdown
 	fmt.Println("Quitting due to signal:", sig)
+
+	// Shut down config reloads.
+	signal.Stop(configReload)
+	close(configReload)
 	done <- true
 }
