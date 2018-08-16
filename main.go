@@ -68,8 +68,7 @@ func main() {
 }
 
 func reloadHandler(configReload chan os.Signal) {
-	for {
-		sig := <-configReload
+	for sig := range configReload {
 		fmt.Println("Reloading config due to:", sig)
 	}
 }
