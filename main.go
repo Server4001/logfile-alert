@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -9,29 +10,46 @@ import (
 	"syscall"
 )
 
-func getConfig() []Watcher {
+var (
+	config = &Config{}
+)
+
+func getConfig() (watchers []Watcher, err error) {
 	// TODO : CHANGE THIS.
 	configFilePath := "/Users/briceb/projects/go/src/github.com/server4001/logfile-alert/config.json"
 
 	configRaw, err := ioutil.ReadFile(configFilePath)
 	if err != nil {
-		panic(err)
+		return
 	}
 
 	var configParsed map[string]interface{}
 
-	jsonErr := json.Unmarshal(configRaw, &configParsed)
-	if jsonErr != nil {
-		panic(jsonErr)
+	err = json.Unmarshal(configRaw, &configParsed)
+	if err != nil {
+		return
 	}
 
-	watchersParsed := configParsed["watchers"].([]interface{})
-	watchers := make([]Watcher, 0)
+	watchersParsed, casted := configParsed["watchers"].([]interface{})
+	if !casted {
+		err = errors.New("invalid watchers node in config file")
+		return
+	}
 
 	for idx := range watchersParsed {
 		watcher := watchersParsed[idx].(map[string]interface{})
-		logFiles := watcher["log_files"].([]interface{})
-		regex := watcher["regex"].(string)
+
+		logFiles, casted := watcher["log_files"].([]interface{})
+		if !casted {
+			err = errors.New(fmt.Sprint("invalid log_files node in config file for watcher index ", idx))
+			return
+		}
+
+		regex, casted := watcher["regex"].(string)
+		if !casted {
+			err = errors.New(fmt.Sprint("invalid regex node in config file for watcher index ", idx))
+			return
+		}
 
 		watchers = append(watchers, Watcher{
 			logFiles,
@@ -39,13 +57,21 @@ func getConfig() []Watcher {
 		})
 	}
 
-	return watchers
+	return
 }
 
 func main() {
-	watchers := getConfig()
+	watchers, err := getConfig()
 
-	for _, watcher := range watchers {
+	if err != nil {
+		// TODO : Change to log.Println("open config: ", err); os.Exit(1)
+		panic(err)
+	}
+
+	config.setWatchers(watchers)
+
+	// TODO : REMOVE.
+	for _, watcher := range config.getWatchers() {
 		fmt.Println(watcher.regex)
 		for _, logFile := range watcher.logFiles {
 			fmt.Println(logFile)
@@ -68,8 +94,16 @@ func main() {
 }
 
 func reloadHandler(configReload chan os.Signal) {
-	for sig := range configReload {
-		fmt.Println("Reloading config due to:", sig)
+	for range configReload {
+		watchers, err := getConfig()
+
+		if err != nil {
+			// TODO : Change to STDERR.
+			fmt.Println("Failed to reload config:", err)
+		} else {
+			config.setWatchers(watchers)
+			fmt.Println("Reloaded config.")
+		}
 	}
 }
 
